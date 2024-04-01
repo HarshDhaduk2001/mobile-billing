@@ -1,5 +1,6 @@
 const Task = require("../models/taskModel");
 const { verifyJWT } = require("../middlewares/authMiddleware");
+const sequelize = require("../config/db");
 
 exports.getAllTasks = async (req, res) => {
   try {
@@ -17,8 +18,31 @@ exports.getAllTasks = async (req, res) => {
         .json({ status: "failure", error: "Invalid token." });
     }
 
-    const task = await Task.findAll();
-    res.status(200).json({ status: "success", responseData: task });
+    const pageSize = parseInt(req.body.pageSize) || 10;
+    const pageNumber = parseInt(req.body.pageNumber) || 1;
+
+    // Execute the stored procedure using Sequelize
+    const [results, metadata] = await sequelize.query(
+      "CALL GetAllTasksWithCount(:pageSize, :pageNumber)",
+      {
+        replacements: { pageSize, pageNumber },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+    const result = Object.values(results)
+    console.log(result)
+    const totalCount = result[0].totalCount;
+    const paginatedResults = result[0];
+    console.log(result,totalCount,paginatedResults)
+
+    res
+      .status(200)
+      .json({
+        status: "success",
+        totalCount,
+        responseData: { List: paginatedResults, TotalCount: totalCount },
+      });
+    // res.status(200).json({ status: "success", responseData: Object.values(results) });
   } catch (error) {
     res
       .status(500)
