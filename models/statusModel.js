@@ -11,6 +11,10 @@ const Status = sequelize.define("Status", {
     allowNull: false,
     unique: true,
   },
+  colorCode: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   deletedAt: {
     type: DataTypes.DATE,
     allowNull: true,

@@ -1,6 +1,7 @@
 const Task = require("../models/taskModel");
-const { verifyJWT } = require("../middlewares/authMiddleware");
 const sequelize = require("../config/db");
+const ExcelJS = require("exceljs");
+const { Op } = require("sequelize");
 
 exports.getAllTasks = async (req, res) => {
   try {
@@ -11,38 +12,33 @@ exports.getAllTasks = async (req, res) => {
         .json({ status: "failure", error: "Unauthorized: Token missing." });
     }
 
-    const verify = await verifyJWT(token);
-    if (!verify) {
-      return res
-        .status(403)
-        .json({ status: "failure", error: "Invalid token." });
-    }
-
     const pageSize = parseInt(req.body.pageSize) || 10;
     const pageNumber = parseInt(req.body.pageNumber) || 1;
+    const globalSearch = req.body.globalSearch || null;
+    const taskStatusID = parseInt(req.body.taskStatusID) || null;
+    const receivedByID = parseInt(req.body.receivedByID) || null;
 
-    // Execute the stored procedure using Sequelize
-    const [results, metadata] = await sequelize.query(
-      "CALL GetAllTasksWithCount(:pageSize, :pageNumber)",
+    const results = await sequelize.query(
+      "CALL GetAllTasksWithCount (:pageSize, :pageNumber, :globalSearch, :taskStatusID, :receivedByID)",
       {
-        replacements: { pageSize, pageNumber },
+        replacements: {
+          pageSize,
+          pageNumber,
+          globalSearch,
+          taskStatusID,
+          receivedByID,
+        },
         type: sequelize.QueryTypes.SELECT,
       }
     );
-    const result = Object.values(results)
-    console.log(result)
-    const totalCount = result[0].totalCount;
-    const paginatedResults = result[0];
-    console.log(result,totalCount,paginatedResults)
 
-    res
-      .status(200)
-      .json({
-        status: "success",
-        totalCount,
-        responseData: { List: paginatedResults, TotalCount: totalCount },
-      });
-    // res.status(200).json({ status: "success", responseData: Object.values(results) });
+    res.status(200).json({
+      status: "success",
+      responseData: {
+        List: Object.values(results[1]),
+        TotalCount: results[0][0].totalCount,
+      },
+    });
   } catch (error) {
     res
       .status(500)
@@ -195,7 +191,7 @@ exports.updateTaskStatus = async (req, res) => {
     const task = await Task.findOne({
       where: { id: taskId },
     });
-    console.log("task", task);
+
     if (!task) {
       return res
         .status(404)
@@ -211,6 +207,113 @@ exports.updateTaskStatus = async (req, res) => {
       message: "Task status updated successfully.",
     });
   } catch (error) {
+    res
+      .status(500)
+      .json({ status: "failure", error: "Internal Server Error." });
+  }
+};
+
+exports.exportTasksToExcel = async (req, res) => {
+  try {
+    const { taskStatusID, receivedByID, globalSearch } = req.body;
+
+    const whereCondition = {};
+    if (taskStatusID) {
+      whereCondition.taskStatus = taskStatusID;
+    }
+    if (receivedByID) {
+      whereCondition.receivedBy = receivedByID;
+    }
+    if (globalSearch) {
+      whereCondition[Op.or] = [
+        { name: { [Op.like]: `%${globalSearch}%` } },
+        { email: { [Op.like]: `%${globalSearch}%` } },
+        { phone: { [Op.like]: `%${globalSearch}%` } },
+        { model: { [Op.like]: `%${globalSearch}%` } },
+      ];
+    }
+
+    const tasks = await Task.findAll({
+      attributes: [
+        "name",
+        "email",
+        "phone",
+        "taskStatus",
+        "receivedBy",
+        "model",
+        "price",
+      ],
+      where: whereCondition,
+    });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Tasks");
+
+    worksheet.addRow([
+      "Name",
+      "Email",
+      "Phone",
+      "Status",
+      "Received By",
+      "Model",
+      "Price",
+    ]);
+
+    tasks.forEach((task) => {
+      worksheet.addRow([
+        task.name,
+        task.email,
+        task.phone,
+        task.taskStatus,
+        task.receivedBy,
+        task.model,
+        task.price,
+      ]);
+    });
+
+    const totalPrice = tasks.reduce(
+      (acc, task) => acc + parseFloat(task.price || 0),
+      0
+    );
+
+    const totalRow = worksheet.addRow([
+      "Total",
+      "",
+      "",
+      "",
+      "",
+      "",
+      totalPrice,
+    ]);
+    totalRow.eachCell((cell) => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFFF00" },
+      };
+    });
+
+    worksheet.columns.forEach((column) => {
+      let maxLength = 0;
+      column.eachCell({ includeEmpty: true }, (cell) => {
+        const columnLength = cell.value ? cell.value.toString().length : 0;
+        maxLength = Math.max(maxLength, columnLength);
+      });
+      column.width = maxLength < 10 ? 10 : maxLength + 2;
+    });
+
+    const filename = "tasks.xlsx";
+    await workbook.xlsx.writeFile(filename);
+
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    res.status(200).sendFile(filename, { root: "./" });
+  } catch (error) {
+    console.error("Error exporting tasks to Excel:", error);
     res
       .status(500)
       .json({ status: "failure", error: "Internal Server Error." });

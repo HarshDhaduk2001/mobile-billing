@@ -34,18 +34,17 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const userActive = await User.findOne({ where: { email, deletedAt: !null } });
-    if (!userActive) {
-      return res
-        .status(401)
-        .json({ status: "failure", error: "User is deactivated." });
-    }
-
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return res
         .status(401)
         .json({ status: "failure", error: "User does not exist." });
+    }
+
+    if (user.deletedAt !== null) {
+      return res
+        .status(401)
+        .json({ status: "failure", error: "User is deactivated." });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -60,7 +59,11 @@ exports.login = async (req, res) => {
     });
     res
       .status(200)
-      .json({ status: "success", message: "Login successful", responseData:token });
+      .json({
+        status: "success",
+        message: "Login successful",
+        responseData: token,
+      });
   } catch (error) {
     return res
       .status(500)
@@ -97,7 +100,9 @@ exports.resetPassword = async (req, res) => {
     // Verify the token
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
     // Find the user by token
-    const user = await User.findOne({ where: { id: decoded.id, deletedAt: null } });
+    const user = await User.findOne({
+      where: { id: decoded.id, deletedAt: null },
+    });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

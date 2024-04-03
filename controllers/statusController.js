@@ -18,7 +18,9 @@ exports.getAllStatus = async (req, res) => {
         .json({ status: "failure", error: "Invalid token" });
     }
 
-    const status = await Status.findAll({});
+    const status = await Status.findAll({
+      attributes: ["id", "name", "type", "colorCode"],
+    });
     res.status(200).json({ status: "success", responseData: status });
   } catch (error) {
     res.status(500).json({ status: "failure", error: "Internal Server Error" });
@@ -52,7 +54,7 @@ exports.getStatusById = async (req, res) => {
 
 exports.createStatus = async (req, res) => {
   try {
-    const { name, type } = req.body;
+    const { name, type, colorCode } = req.body;
 
     if (!name) {
       return res
@@ -60,7 +62,7 @@ exports.createStatus = async (req, res) => {
         .json({ status: "failure", error: "Name is required" });
     }
 
-    const newStatus = await Status.create({ name, type });
+    const newStatus = await Status.create({ name, type, colorCode });
 
     res.status(201).json({
       status: "success",
@@ -70,18 +72,23 @@ exports.createStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({ status: "failure", error: "Internal Server Error" });
   }
-  //   [
-  //     { name: "Pending", type: "pending" },
-  //     { name: "Working", type: "working" },
-  //     { name: "Delivered", type: "delivered" },
-  //     { name: "On Hold", type: "onhold" },
-  //   ];
+  // Add this statuses
+  // { "name": "Pending", "type": "pending", "colorCode": "#A5A5A5"
+  // }
+  // { "name": "Working", "type": "working", "colorCode": "#4472C4"
+  // }
+  // { "name": "Ready For Delivery", "type": "readyForDelivered", "colorCode": "#008EFF"
+  // }
+  // { "name": "Received By Client", "type": "receivedByClient", "colorCode": "#3CB371"
+  // }
+  // { "name": "On Hold", "type": "onhold", "colorCode": "#FFC000"
+  // }
 };
 
 exports.updateStatus = async (req, res) => {
   try {
     const statusId = req.params.id;
-    const { name } = req.body;
+    const { name, colorCode } = req.body;
 
     if (!name || !statusId) {
       return res
@@ -99,6 +106,7 @@ exports.updateStatus = async (req, res) => {
     }
 
     status.name = name;
+    status.colorCode = colorCode;
     await status.save();
 
     res
@@ -156,13 +164,16 @@ exports.getStatusList = async (req, res) => {
     }
 
     const status = await Status.findAll({
-      attributes: ['id', 'name'],
+      attributes: ["id", "name", "colorCode"],
       where: { deletedAt: null },
     });
 
-    const statusData = status.map(({ id, name }) => ({ label: name, value: id }));
+    const statusData = status.map(({ id, name }) => ({
+      label: name,
+      value: id,
+      colorCode: colorCode,
+    }));
 
-    
     res.status(200).json({ status: "success", responseData: statusData });
   } catch (error) {
     res.status(500).json({ status: "failure", error: "Internal Server Error" });

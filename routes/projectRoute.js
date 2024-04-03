@@ -3,7 +3,7 @@ const projectController = require("../controllers/projectController");
 const { authenticateJWT } = require("../middlewares/authMiddleware");
 const router = express.Router();
 
-router.post("/", authenticateJWT, projectController.getAllProjects);
+router.get("/", authenticateJWT, projectController.getAllProjects);
 router.get("/:id", authenticateJWT, projectController.getProjectById);
 router.post("/", authenticateJWT, projectController.createProject);
 router.post("/:id", authenticateJWT, projectController.updateProject);
