@@ -1,4 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = { elv: { Base_URL: process.env.Base_URL } };
+const nextConfig = { env: { Base_URL: process.env.Base_URL } };
 
 export default nextConfig;

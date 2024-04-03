@@ -1,9 +1,13 @@
 "use client";
-import { Button, Grid, TextField } from "@mui/material";
+import { callAPI } from "@/utils/Common/ApiCall";
+import { Button, CircularProgress, TextField } from "@mui/material";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 const page = () => {
+  const router = useRouter();
   const [userName, setUserName] = useState("");
   const [userNameError, setUserNameError] = useState(false);
   const [email, setEmail] = useState("");
@@ -12,6 +16,7 @@ const page = () => {
   const [passwordError, setPasswordError] = useState(false);
   const [cPassword, setCPassword] = useState("");
   const [cPasswordError, setCPasswordError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
@@ -44,7 +49,33 @@ const page = () => {
       !cPasswordError &&
       password.trim() === cPassword.trim()
     ) {
-      console.log(userName, email, password, cPassword);
+      setLoading(true);
+      const params = {
+        name: userName,
+        email: email,
+        password: password,
+      };
+      const url = `${process.env.Base_URL}/auth/register`;
+      const successCallback = (
+        ResponseData: null,
+        Message: string,
+        error: boolean,
+        ResponseStatus: string
+      ) => {
+        if (ResponseStatus === "success" && error === false) {
+          toast.success(Message || "You have been successfully registered.");
+          setLoading(false);
+          router.push("/login");
+        } else if (ResponseStatus === "warning" && error === false) {
+          toast.warning(Message);
+          router.push("/login");
+        } else {
+          setLoading(false);
+        }
+      };
+      callAPI(url, params, successCallback, "POST");
+    } else {
+      setLoading(false);
     }
   };
 
@@ -222,14 +253,20 @@ const page = () => {
                 </Link>
               </div>
 
-              <Button
-                variant="contained"
-                type="submit"
-                className="inline-block w-full rounded bg-primary px-7 pb-2.5 pt-3 text-sm font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
-                fullWidth
-              >
-                Register
-              </Button>
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <CircularProgress />
+                </div>
+              ) : (
+                <Button
+                  variant="contained"
+                  type="submit"
+                  className="inline-block w-full rounded bg-primary px-7 pb-2.5 pt-3 text-sm font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
+                  fullWidth
+                >
+                  Register
+                </Button>
+              )}
 
               <p className="mb-0 mt-2 pt-1 text-sm font-semibold">
                 If you already have an account?&nbsp;
