@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const sequelize = require("./config/db");
+const cors = require("cors");
 
 dotenv.config({ path: "./.env" });
 
@@ -18,11 +19,11 @@ const app = express();
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+app.use(cors());
 
 // Routes
-app.use("/auth", require("./routes/authRoute"));
-app.use("/project", require("./routes/projectRoute"));
-app.use("/task", require("./routes/taskRoute"));
+app.use("/auth", require("./routes/userRoute"));
+app.use("/task", require("./routes/customerRoute"));
 app.use("/status", require("./routes/statusRoute"));
 
 const PORT = process.env.PORT || 8000;

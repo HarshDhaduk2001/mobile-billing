@@ -1,29 +1,15 @@
 const Status = require("../models/statusModel");
-const { verifyJWT } = require("../middlewares/authMiddleware");
 require("dotenv").config();
 
 exports.getAllStatus = async (req, res) => {
   try {
-    const token = req.headers.authorization?.substring(7);
-    if (!token) {
-      return res
-        .status(401)
-        .json({ status: "failure", error: "Unauthorized: Token missing" });
-    }
-
-    const verify = await verifyJWT(token);
-    if (!verify) {
-      return res
-        .status(403)
-        .json({ status: "failure", error: "Invalid token" });
-    }
-
     const status = await Status.findAll({
       attributes: ["id", "name", "type", "colorCode"],
     });
-    res.status(200).json({ status: "success", responseData: status });
+
+    ResponseData(res, 200, "success", status, null);
   } catch (error) {
-    res.status(500).json({ status: "failure", error: "Internal Server Error" });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
 
@@ -31,9 +17,7 @@ exports.getStatusById = async (req, res) => {
   try {
     const statusId = req.params.id;
     if (isNaN(statusId) || statusId <= 0) {
-      return res
-        .status(400)
-        .json({ status: "failure", error: "Invalid status ID" });
+      ResponseData(res, 200, "failure", null, "Invalid status ID.");
     }
 
     const status = await Status.findOne({
@@ -41,14 +25,12 @@ exports.getStatusById = async (req, res) => {
     });
 
     if (!status) {
-      return res
-        .status(404)
-        .json({ status: "failure", error: "Status not found" });
+      ResponseData(res, 200, "failure", null, "Status not found.");
     }
 
-    res.status(200).json({ status: "success", responseData: status });
+    ResponseData(res, 200, "success", status, null);
   } catch (error) {
-    res.status(500).json({ status: "failure", error: "Internal Server Error" });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
 
@@ -57,20 +39,20 @@ exports.createStatus = async (req, res) => {
     const { name, type, colorCode } = req.body;
 
     if (!name) {
-      return res
-        .status(400)
-        .json({ status: "failure", error: "Name is required" });
+      ResponseData(res, 200, "failure", null, "Name is required.");
     }
 
     const newStatus = await Status.create({ name, type, colorCode });
 
-    res.status(201).json({
-      status: "success",
-      message: "Status created successfully",
-      responseData: newStatus,
-    });
+    ResponseData(
+      res,
+      200,
+      "success",
+      newStatus,
+      "Status created successfully."
+    );
   } catch (error) {
-    res.status(500).json({ status: "failure", error: "Internal Server Error" });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
   // Add this statuses
   // { "name": "Pending", "type": "pending", "colorCode": "#A5A5A5"
@@ -91,29 +73,23 @@ exports.updateStatus = async (req, res) => {
     const { name, colorCode } = req.body;
 
     if (!name || !statusId) {
-      return res
-        .status(400)
-        .json({ status: "failure", error: "Name and ID are required" });
+      ResponseData(res, 200, "failure", null, "Name and ID are required.");
     }
 
     const status = await Status.findOne({
       where: { id: statusId, deletedAt: null },
     });
     if (!status) {
-      return res
-        .status(404)
-        .json({ status: "failure", error: "Status not found" });
+      ResponseData(res, 200, "failure", null, "Status not found.");
     }
 
     status.name = name;
     status.colorCode = colorCode;
     await status.save();
 
-    res
-      .status(200)
-      .json({ status: "success", message: "Status updated successfully" });
+    ResponseData(res, 200, "success", null, "Status updated successfully.");
   } catch (error) {
-    res.status(500).json({ status: "failure", error: "Internal Server Error" });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
 
@@ -122,60 +98,46 @@ exports.deleteStatus = async (req, res) => {
     const statusId = req.params.id;
 
     if (!statusId) {
-      return res
-        .status(400)
-        .json({ status: "failure", error: "Invalid status ID" });
+      ResponseData(res, 200, "failure", null, "Invalid status ID.");
     }
 
     const status = await Status.findOne({
       where: { id: statusId, deletedAt: null },
     });
     if (!status) {
-      return res
-        .status(404)
-        .json({ status: "failure", error: "Status not found" });
+      ResponseData(res, 200, "failure", null, "Status not found.");
     }
 
     status.deletedAt = new Date();
     await status.save();
 
-    res
-      .status(200)
-      .json({ status: "success", message: "Status deleted successfully" });
+    ResponseData(
+      res,
+      200,
+      "success",
+      null,
+      "Status has been deleted successfully."
+    );
   } catch (error) {
-    res.status(500).json({ status: "failure", error: "Internal Server Error" });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
 
 exports.getStatusList = async (req, res) => {
   try {
-    const token = req.headers.authorization?.substring(7);
-    if (!token) {
-      return res
-        .status(401)
-        .json({ status: "failure", error: "Unauthorized: Token missing" });
-    }
-
-    const verify = await verifyJWT(token);
-    if (!verify) {
-      return res
-        .status(403)
-        .json({ status: "failure", error: "Invalid token" });
-    }
-
     const status = await Status.findAll({
       attributes: ["id", "name", "colorCode"],
       where: { deletedAt: null },
     });
 
-    const statusData = status.map(({ id, name }) => ({
+    const statusData = status.map(({ id, name, colorCode }) => ({
       label: name,
       value: id,
       colorCode: colorCode,
     }));
 
-    res.status(200).json({ status: "success", responseData: statusData });
+    ResponseData(res, 200, "success", statusData, null);
   } catch (error) {
-    res.status(500).json({ status: "failure", error: "Internal Server Error" });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };

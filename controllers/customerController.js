@@ -1,17 +1,11 @@
-const Task = require("../models/taskModel");
+const Customer = require("../models/customerModel");
 const sequelize = require("../config/db");
 const ExcelJS = require("exceljs");
 const { Op } = require("sequelize");
+const { ResponseData } = require("../utils/responseData");
 
 exports.getAllTasks = async (req, res) => {
   try {
-    const token = req.headers.authorization?.substring(7);
-    if (!token) {
-      return res
-        .status(401)
-        .json({ status: "failure", error: "Unauthorized: Token missing." });
-    }
-
     const pageSize = parseInt(req.body.pageSize) || 10;
     const pageNumber = parseInt(req.body.pageNumber) || 1;
     const globalSearch = req.body.globalSearch || null;
@@ -32,17 +26,18 @@ exports.getAllTasks = async (req, res) => {
       }
     );
 
-    res.status(200).json({
-      status: "success",
-      responseData: {
+    ResponseData(
+      res,
+      200,
+      "success",
+      {
         List: Object.values(results[1]),
         TotalCount: results[0][0].totalCount,
       },
-    });
+      null
+    );
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: "failure", error: "Internal Server Error." });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
 
@@ -50,24 +45,20 @@ exports.getTaskById = async (req, res) => {
   try {
     const taskId = req.params.id;
     if (isNaN(taskId) || taskId <= 0) {
-      return res
-        .status(400)
-        .json({ status: "failure", error: "Invalid task ID" });
+      ResponseData(res, 200, "failure", null, "Invalid task ID.");
     }
 
-    const task = await Task.findOne({
+    const task = await Customer.findOne({
       where: { id: taskId },
     });
 
     if (!task) {
-      return res
-        .status(404)
-        .json({ status: "failure", error: "Task not found" });
+      ResponseData(res, 200, "failure", null, "Task not found.");
     }
 
-    res.status(200).json({ status: "success", responseData: task });
+    ResponseData(res, 200, "success", task, null);
   } catch (error) {
-    res.status(500).json({ status: "failure", error: "Internal Server Error" });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
 
@@ -76,11 +67,10 @@ exports.createTask = async (req, res) => {
     const {
       name,
       email,
-      phone,
+      contactNo,
       address,
       model,
       problem,
-      passwordType,
       password,
       receivedBy,
       price,
@@ -89,14 +79,13 @@ exports.createTask = async (req, res) => {
       deliverDate,
     } = req.body;
 
-    const newTask = await Task.create({
+    const newTask = await Customer.create({
       name,
       email,
-      phone,
+      contactNo,
       address,
       model,
       problem,
-      passwordType,
       password,
       receivedBy,
       price,
@@ -106,15 +95,9 @@ exports.createTask = async (req, res) => {
       updatedBy: req.user.id,
     });
 
-    res.status(201).json({
-      status: "success",
-      message: "Task created successfully.",
-      responseData: newTask,
-    });
+    ResponseData(res, 200, "success", newTask, "Task created successfully.");
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: "failure", error: "Internal Server Error.", error });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
 
@@ -124,12 +107,11 @@ exports.updateTask = async (req, res) => {
     const {
       name,
       email,
-      phone,
+      contactNo,
       address,
       model,
       problem,
       password,
-      passwordType,
       price,
       advance,
       receivedBy,
@@ -138,27 +120,22 @@ exports.updateTask = async (req, res) => {
     } = req.body;
 
     if (!taskId) {
-      return res
-        .status(400)
-        .json({ status: "failure", error: "ID is required." });
+      ResponseData(res, 200, "failure", null, "ID is required.");
     }
 
-    const task = await Task.findOne({
+    const task = await Customer.findOne({
       where: { id: taskId },
     });
     if (!task) {
-      return res
-        .status(404)
-        .json({ status: "failure", error: "Task not found." });
+      ResponseData(res, 200, "failure", null, "Task not found.");
     }
 
     task.name = name;
     task.email = email;
-    task.phone = phone;
+    task.contactNo = contactNo;
     task.address = address;
     task.model = model;
     task.problem = problem;
-    task.passwordType = passwordType;
     task.password = password;
     task.receivedBy = receivedBy;
     task.price = price;
@@ -168,13 +145,9 @@ exports.updateTask = async (req, res) => {
     task.updatedBy = req.user.id;
     await task.save();
 
-    res
-      .status(200)
-      .json({ status: "success", message: "Task updated successfully." });
+    ResponseData(res, 200, "success", null, "Task updated successfully.");
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: "failure", error: "Internal Server Error." });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
 
@@ -183,33 +156,30 @@ exports.updateTaskStatus = async (req, res) => {
     const { taskId, taskStatus } = req.body;
 
     if (!taskId) {
-      return res
-        .status(400)
-        .json({ status: "failure", error: "ID is required." });
+      ResponseData(res, 200, "failure", null, "ID is required.");
     }
 
-    const task = await Task.findOne({
+    const task = await Customer.findOne({
       where: { id: taskId },
     });
 
     if (!task) {
-      return res
-        .status(404)
-        .json({ status: "failure", error: "Task not 1 found." });
+      ResponseData(res, 200, "failure", null, "Task not found.");
     }
 
     task.taskStatus = taskStatus;
     task.updatedBy = req.user.id;
     await task.save();
 
-    res.status(200).json({
-      status: "success",
-      message: "Task status updated successfully.",
-    });
+    ResponseData(
+      res,
+      200,
+      "success",
+      null,
+      "Task status updated successfully."
+    );
   } catch (error) {
-    res
-      .status(500)
-      .json({ status: "failure", error: "Internal Server Error." });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
 
@@ -228,12 +198,12 @@ exports.exportTasksToExcel = async (req, res) => {
       whereCondition[Op.or] = [
         { name: { [Op.like]: `%${globalSearch}%` } },
         { email: { [Op.like]: `%${globalSearch}%` } },
-        { phone: { [Op.like]: `%${globalSearch}%` } },
+        { contactNo: { [Op.like]: `%${globalSearch}%` } },
         { model: { [Op.like]: `%${globalSearch}%` } },
       ];
     }
 
-    const tasks = await Task.findAll({
+    const tasks = await Customer.findAll({
       attributes: [
         "name",
         "email",
@@ -263,7 +233,7 @@ exports.exportTasksToExcel = async (req, res) => {
       worksheet.addRow([
         task.name,
         task.email,
-        task.phone,
+        task.contactNo,
         task.taskStatus,
         task.receivedBy,
         task.model,
@@ -313,9 +283,6 @@ exports.exportTasksToExcel = async (req, res) => {
 
     res.status(200).sendFile(filename, { root: "./" });
   } catch (error) {
-    console.error("Error exporting tasks to Excel:", error);
-    res
-      .status(500)
-      .json({ status: "failure", error: "Internal Server Error." });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };

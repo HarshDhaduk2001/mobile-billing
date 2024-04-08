@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const { ResponseData } = require("./responseData");
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
@@ -23,11 +24,8 @@ exports.sendPasswordResetEmail = async (user, token, res) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    return res.send({ status: "success", message: "Email sent successfully." });
+    ResponseData(res, 200, "success", null, "Email sent successfully.");
   } catch (error) {
-    console.error("err",error);
-    return res
-      .status(500)
-      .json({ status: "failure", error: "Failed to send email" });
+    ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };

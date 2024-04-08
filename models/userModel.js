@@ -15,6 +15,18 @@ const User = sequelize.define("User", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  contactNo: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  shopName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  shopAddress: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   deletedAt: {
     type: DataTypes.DATE,
     allowNull: true,

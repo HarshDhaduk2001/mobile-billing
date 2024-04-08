@@ -1,8 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const Status = require("./statusModel");
 
-const Task = sequelize.define("Task", {
+const Customer = sequelize.define("Customer", {
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -11,7 +10,7 @@ const Task = sequelize.define("Task", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  phone: {
+  contactNo: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
@@ -62,4 +61,4 @@ const Task = sequelize.define("Task", {
   },
 });
 
-module.exports = Task;
+module.exports = Customer;
