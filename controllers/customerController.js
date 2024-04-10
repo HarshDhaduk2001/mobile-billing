@@ -3,6 +3,7 @@ const sequelize = require("../config/db");
 const ExcelJS = require("exceljs");
 const { Op } = require("sequelize");
 const { ResponseData } = require("../utils/responseData");
+const Status = require("../models/statusModel");
 
 exports.getAllTasks = async (req, res) => {
   try {
@@ -50,13 +51,20 @@ exports.getTaskById = async (req, res) => {
 
     const task = await Customer.findOne({
       where: { id: taskId },
+      include: {
+        model: Status,
+        attributes: ['name'],
+      },
     });
 
     if (!task) {
       ResponseData(res, 200, "failure", null, "Task not found.");
     }
 
-    ResponseData(res, 200, "success", task, null);
+    ResponseData(res, 200, "success", {
+      ...task.toJSON(),
+      // Status: task.Status.name,
+    }, null);
   } catch (error) {
     ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }

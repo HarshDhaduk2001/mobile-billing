@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const Status = require("./statusModel");
 
 const Customer = sequelize.define("Customer", {
   name: {
@@ -30,12 +31,12 @@ const Customer = sequelize.define("Customer", {
     type: DataTypes.INTEGER,
     allowNull: true,
     defaultValue: 1,
+    references: {
+      model: Status,
+      key: 'id',
+    },
   },
   receivedBy: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  passwordType: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
@@ -61,4 +62,5 @@ const Customer = sequelize.define("Customer", {
   },
 });
 
+Customer.belongsTo(Status, { foreignKey: 'taskStatus' });
 module.exports = Customer;
