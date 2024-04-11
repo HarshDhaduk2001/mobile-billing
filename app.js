@@ -23,8 +23,9 @@ app.use(cors());
 
 // Routes
 app.use("/auth", require("./routes/userRoute"));
-app.use("/task", require("./routes/customerRoute"));
+app.use("/task", require("./routes/taskRoute"));
 app.use("/status", require("./routes/statusRoute"));
+app.use("/organization", require("./routes/organizationRoute"));
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
