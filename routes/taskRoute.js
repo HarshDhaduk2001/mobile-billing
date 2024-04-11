@@ -1,13 +1,13 @@
 const express = require("express");
-const customerController = require("../controllers/customerController");
+const taskController = require("../controllers/taskController");
 const { authenticateJWT } = require("../middlewares/authMiddleware");
 const router = express.Router();
 
-router.post("/getAllTask", authenticateJWT, customerController.getAllTasks);
-router.post("/", authenticateJWT, customerController.createTask);
-router.post("/updateStatus", authenticateJWT, customerController.updateTaskStatus);
-router.post("/exportTask", authenticateJWT, customerController.exportTasksToExcel);
-router.get("/:id", authenticateJWT, customerController.getTaskById);
-router.post("/:id", authenticateJWT, customerController.updateTask);
+router.post("/getAllTask", authenticateJWT, taskController.getAllTasks);
+router.post("/", authenticateJWT, taskController.createTask);
+router.post("/updateTask", authenticateJWT, taskController.updateTask);
+router.post("/updateStatus", authenticateJWT, taskController.updateTaskStatus);
+router.post("/exportTask", authenticateJWT, taskController.exportTasksToExcel);
+router.get("/:id", authenticateJWT, taskController.getTaskById);
 
 module.exports = router;
