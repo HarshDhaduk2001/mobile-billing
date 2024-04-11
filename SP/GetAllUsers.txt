@@ -1,0 +1,55 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllUsers`(
+    IN pageSize INT,
+    IN pageNumber INT,
+    IN globalSearch VARCHAR(255),
+    IN orgId INT,
+    IN userType INT
+)
+BEGIN
+    DECLARE offsetValue INT DEFAULT 0;
+    DECLARE totalCount INT;
+    SET offsetValue = (pageNumber - 1) * pageSize;
+
+    -- Temporary table to store user details
+    CREATE TEMPORARY TABLE IF NOT EXISTS TempGetAllUsers AS    
+        SELECT 
+            u.userId AS id,
+            u.name,
+            u.email,
+            u.contactNo,
+            u.shopName,
+            u.shopAddress,
+            u.deletedAt,
+            o.name AS organizationName,
+            u.orgId
+        FROM 
+            Users AS u
+        LEFT JOIN 
+            Organizations AS o ON u.orgId = o.orgId
+        WHERE 
+            (globalSearch IS NULL OR
+             u.name LIKE CONCAT('%', globalSearch, '%') OR
+             u.email LIKE CONCAT('%', globalSearch, '%') OR
+             u.contactNo LIKE CONCAT('%', globalSearch, '%') OR
+             u.shopName LIKE CONCAT('%', globalSearch, '%'))
+            AND (userType = 1 OR (userType <> 1 AND u.orgId = orgId));
+
+    -- Get total count from temporary table
+SELECT 
+    COUNT(*)
+INTO totalCount FROM
+    TempGetAllUsers;
+    
+    -- Return total count
+SELECT totalCount AS totalCount;
+
+    -- Select paginated results with limit and offset
+SELECT 
+    *
+FROM
+    TempGetAllUsers
+LIMIT PAGESIZE OFFSET OFFSETVALUE;
+
+    -- Drop the temporary table
+    DROP TEMPORARY TABLE IF EXISTS TempGetAllUsers;
+END

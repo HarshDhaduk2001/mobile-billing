@@ -183,6 +183,7 @@ exports.deleteOrganization = async (req, res) => {
 exports.getOrganizationList = async (req, res) => {
   const userOrgId = req.user.orgId;
   const userType = req.user.userType;
+  console.log(userType)
   try {
     let org;
     if (userType === 1) {

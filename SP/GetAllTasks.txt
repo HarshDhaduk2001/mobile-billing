@@ -1,0 +1,95 @@
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllTasks`(
+    IN pageSize INT,
+    IN pageNumber INT,
+    IN globalSearch VARCHAR(255),
+    IN taskStatusId INT,
+    IN receivedBy INT,
+    IN updatedBy INT,
+    IN orgId INT,
+    IN userType INT,
+    IN isDownload BOOLEAN
+)
+BEGIN
+    DECLARE offsetValue INT DEFAULT 0;
+    DECLARE totalCount INT;
+    SET offsetValue = (pageNumber - 1) * pageSize;
+
+    -- Temporary table to store task details
+    CREATE TEMPORARY TABLE IF NOT EXISTS TempGetAllTasks AS    
+        SELECT 
+            r.repairId AS id,
+            c.customerId,
+            c.name AS customerName,
+            c.email AS customerEmail,
+            c.contactNo AS customerContactNo,
+            c.address AS customerAddress,
+            r.sim,
+            r.simTray,
+            r.backPanel,
+            r.battery,
+            r.brand,
+            r.model,
+            r.problem,
+            r.taskStatusId,
+            s.name AS taskStatusName,
+            s.colorCode AS taskStatusColorCode,
+            r.receivedBy,
+            rb.name AS receivedByName,
+            r.password,
+            r.price,
+            r.advancePayment,
+            r.deliverDate,
+            r.updatedBy,
+            ub.name AS updatedByName
+        FROM 
+            Repairs AS r
+        LEFT JOIN 
+            Customers AS c ON r.customerId = c.customerId
+        LEFT JOIN
+            Users AS rb ON r.receivedBy = rb.userId
+        LEFT JOIN
+            Users AS ub ON r.updatedBy = ub.userId
+        LEFT JOIN 
+            Statuses AS s ON r.taskStatusId = s.statusId
+        WHERE
+            (COALESCE(taskStatusId, -1) = -1 OR r.taskStatusId = taskStatusId)
+            AND (COALESCE(receivedBy, -1) = -1 OR r.receivedBy = receivedBy)
+            AND (COALESCE(updatedBy, -1) = -1 OR r.updatedBy = updatedBy)
+            AND (globalSearch IS NULL OR
+                 c.name LIKE CONCAT('%', globalSearch, '%') OR
+                 c.email LIKE CONCAT('%', globalSearch, '%') OR
+                 c.contactNo LIKE CONCAT('%', globalSearch, '%') OR
+                 r.brand LIKE CONCAT('%', globalSearch, '%') OR
+                 r.model LIKE CONCAT('%', globalSearch, '%') OR
+                 s.name LIKE CONCAT('%', globalSearch, '%'))
+			AND userType = 1
+					OR (userType <> 1
+					AND orgId = r.orgId);
+
+    -- Get total count from temporary table
+SELECT 
+    COUNT(*)
+INTO totalCount FROM
+    TempGetAllTasks;
+    
+    -- Return total count
+SELECT totalCount AS totalCount;
+
+    -- Select paginated results with limit and offset
+IF NOT isDownload THEN
+        SELECT 
+            *
+        FROM
+            TempGetAllTasks
+        LIMIT pageSize OFFSET offsetValue;
+    ELSE
+        -- Select all results if downloading
+        SELECT 
+            *
+        FROM
+            TempGetAllTasks;
+    END IF;
+
+    -- Drop the temporary table
+    DROP TEMPORARY TABLE IF EXISTS TempGetAllTasks;
+END

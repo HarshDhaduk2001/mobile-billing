@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Status = require("./statusModel");
-const Customer = require("./customerModel");
+const Customer = require("./customerMode");
 const User = require("./userModel");
 const Organization = require("./organizationModel");
 

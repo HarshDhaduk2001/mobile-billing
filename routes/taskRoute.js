@@ -7,7 +7,7 @@ router.post("/getAllTask", authenticateJWT, taskController.getAllTasks);
 router.post("/", authenticateJWT, taskController.createTask);
 router.post("/updateTask", authenticateJWT, taskController.updateTask);
 router.post("/updateStatus", authenticateJWT, taskController.updateTaskStatus);
-router.post("/exportTask", authenticateJWT, taskController.exportTasksToExcel);
+router.post("/task/export", authenticateJWT, taskController.exportTasksToExcel);
 router.get("/:id", authenticateJWT, taskController.getTaskById);
 
 module.exports = router;

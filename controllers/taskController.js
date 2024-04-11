@@ -1,4 +1,4 @@
-const Customer = require("../models/customerModel");
+const Customer = require("../models/customerMode");
 const sequelize = require("../config/db");
 const ExcelJS = require("exceljs");
 const { Op } = require("sequelize");
@@ -15,11 +15,12 @@ exports.getAllTasks = async (req, res) => {
     const taskStatusId = parseInt(req.body.taskStatusId) || null;
     const receivedBy = parseInt(req.body.receivedBy) || null;
     const updatedBy = parseInt(req.body.updatedBy) || null;
+    const isDownload = false;
     const orgId = req.user.orgId;
     const userType = req.user.userType;
 
     const repairDetails = await Repair.sequelize.query(
-      "CALL GetAllTasks(:pageSize, :pageNumber, :globalSearch, :taskStatusId, :receivedBy, :updatedBy, :orgId, :userType)",
+      "CALL GetAllTasks(:pageSize, :pageNumber, :globalSearch, :taskStatusId, :receivedBy, :updatedBy, :orgId, :userType, :isDownload)",
       {
         replacements: {
           pageSize,
@@ -30,6 +31,7 @@ exports.getAllTasks = async (req, res) => {
           updatedBy,
           orgId,
           userType,
+          isDownload,
         },
         type: sequelize.QueryTypes.SELECT,
       }
@@ -88,7 +90,7 @@ exports.getTaskById = async (req, res) => {
     }
 
     const responseData = {
-      id: repairId,
+      id: Number(repairId),
       customerId: repairDetails.Customer.customerId,
       name: repairDetails.Customer.name,
       email: repairDetails.Customer.email,
@@ -298,52 +300,35 @@ exports.updateTaskStatus = async (req, res) => {
 
 exports.exportTasksToExcel = async (req, res) => {
   try {
-    const { globalSearch, taskStatusId, receivedBy, updatedBy } = req.body;
+    const pageSize = parseInt(req.body.pageSize) || 10;
+    const pageNumber = parseInt(req.body.pageNumber) || 1;
+    const globalSearch = req.body.globalSearch || null;
+    const taskStatusId = parseInt(req.body.taskStatusId) || null;
+    const receivedBy = parseInt(req.body.receivedBy) || null;
+    const updatedBy = parseInt(req.body.updatedBy) || null;
+    const isDownload = true;
+    const orgId = req.user.orgId;
+    const userType = req.user.userType;
 
-    const whereCondition = {};
-    if (taskStatusId) {
-      whereCondition.taskStatusId = taskStatusId;
-    }
-    if (receivedBy) {
-      whereCondition.receivedBy = receivedBy;
-    }
-    if (updatedBy) {
-      whereCondition.updatedBy = updatedBy;
-    }
-    if (globalSearch) {
-      whereCondition[Op.or] = [
-        { "$Customer.name$": { [Op.like]: `%${globalSearch}%` } },
-        { "$Customer.email$": { [Op.like]: `%${globalSearch}%` } },
-        { "$Customer.contactNo$": { [Op.like]: `%${globalSearch}%` } },
-        { "$Status.name$": { [Op.like]: `%${globalSearch}%` } },
-        { brand: { [Op.like]: `%${globalSearch}%` } },
-        { model: { [Op.like]: `%${globalSearch}%` } },
-      ];
-    }
+    const responseData = await Repair.sequelize.query(
+      "CALL GetAllTasks(:pageSize, :pageNumber, :globalSearch, :taskStatusId, :receivedBy, :updatedBy, :orgId, :userType, :isDownload)",
+      {
+        replacements: {
+          pageSize,
+          pageNumber,
+          globalSearch,
+          taskStatusId,
+          receivedBy,
+          updatedBy,
+          orgId,
+          userType,
+          isDownload,
+        },
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
 
-    const repairDetails = await Repair.findAll({
-      include: [
-        {
-          model: Customer,
-          attributes: ["name", "email", "contactNo", "address"],
-        },
-        {
-          model: User,
-          as: "Receiver",
-          attributes: ["name"],
-        },
-        {
-          model: User,
-          as: "Updater",
-          attributes: ["name"],
-        },
-        {
-          model: Status,
-          attributes: ["name"],
-        },
-      ],
-      where: whereCondition,
-    });
+    const repairDetails = Object.values(responseData[1]);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Tasks");
@@ -372,25 +357,25 @@ exports.exportTasksToExcel = async (req, res) => {
 
     repairDetails.forEach((repair) => {
       worksheet.addRow({
-        id: repair.repairId,
-        name: repair.Customer.name,
-        email: repair.Customer.email,
-        contactNo: repair.Customer.contactNo,
-        address: repair.Customer.address,
-        sim: repair.sim,
-        simTray: repair.simTray,
-        backPanel: repair.backPanel,
-        battery: repair.battery,
+        id: repair.id,
+        name: repair.customerName,
+        email: repair.customerEmail,
+        contactNo: repair.customerContactNo,
+        address: repair.customerAddress,
+        sim: repair.sim === 1 ? true : false,
+        simTray: repair.simTray === 1 ? true : false,
+        backPanel: repair.backPanel === 1 ? true : false,
+        battery: repair.battery === 1 ? true : false,
         brand: repair.brand,
         model: repair.model,
         problem: repair.problem,
-        statusName: repair.Status.name,
-        receivedByName: repair.Receiver.name,
+        statusName: repair.taskStatusName,
+        receivedByName: repair.receivedByName,
         password: repair.password,
         price: repair.price,
         advancePayment: repair.advancePayment,
         deliverDate: repair.deliverDate,
-        updatedByName: repair.Updater.name,
+        updatedByName: repair.updatedByName,
       });
     });
 
