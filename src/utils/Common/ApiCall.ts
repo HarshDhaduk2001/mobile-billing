@@ -9,12 +9,10 @@ export const callAPI = async (
   method: string
 ) => {
   try {
-    const token = await localStorage.getItem("token");
-    const Org_Token = await localStorage.getItem("Org_Token");
+    const token = await localStorage.getItem("Token");
     const config = {
       headers: {
         Authorization: `bearer ${token}`,
-        org_token: `${Org_Token}`,
       },
     };
 
@@ -33,9 +31,19 @@ export const callAPI = async (
     const { ResponseStatus, ResponseData, Message } = response.data;
     if (response.status === 200) {
       if (ResponseStatus.toLowerCase() === "success") {
-        successCallback(ResponseData, Message, false, ResponseStatus.toLowerCase());
+        successCallback(
+          ResponseData,
+          Message,
+          false,
+          ResponseStatus.toLowerCase()
+        );
       } else if (ResponseStatus.toLowerCase() === "warning") {
-        successCallback(ResponseData, Message, false, ResponseStatus.toLowerCase());
+        successCallback(
+          ResponseData,
+          Message,
+          false,
+          ResponseStatus.toLowerCase()
+        );
       } else {
         if (Message === null) {
           toast.error("Please try again later.");

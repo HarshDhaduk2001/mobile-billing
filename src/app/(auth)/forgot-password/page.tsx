@@ -1,11 +1,21 @@
 "use client";
-import { Button, TextField } from "@mui/material";
+import { callAPI } from "@/utils/Common/ApiCall";
+import { hasToken } from "@/utils/Common/Functions";
+import { Button, CircularProgress, TextField } from "@mui/material";
 import Link from "next/link";
-import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const page = () => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    hasToken(router);
+  }, [router]);
 
   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
@@ -15,7 +25,34 @@ const page = () => {
     setEmailError(email.trim().length <= 0 || !emailRegex.test(email));
 
     if (email.trim().length > 0 && emailRegex.test(email) && !emailError) {
-      console.log(email);
+      setLoading(true);
+      const params = {
+        email: email,
+      };
+      const url = `${process.env.Base_URL}/auth/forgot-password`;
+      const successCallback = (
+        ResponseData: null,
+        Message: string,
+        error: boolean,
+        ResponseStatus: string
+      ) => {
+        if (ResponseStatus === "success" && error === false) {
+          toast.success(Message || "Please check your email.");
+          setLoading(false);
+          router.push("/login");
+        } else if (ResponseStatus === "warning" && error === false) {
+          toast.warning(Message);
+          setEmail("");
+          setEmailError(false);
+          setLoading(false);
+          router.push("/login");
+        } else {
+          setLoading(false);
+        }
+      };
+      callAPI(url, params, successCallback, "POST");
+    } else {
+      setLoading(false);
     }
   };
 
@@ -78,14 +115,20 @@ const page = () => {
                 autoComplete="off"
               />
 
-              <Button
-                variant="contained"
-                type="submit"
-                className="inline-block w-full mt-6 rounded bg-primary px-7 pb-2.5 pt-3 text-sm font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
-                fullWidth
-              >
-                Send Email
-              </Button>
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <CircularProgress />
+                </div>
+              ) : (
+                <Button
+                  variant="contained"
+                  type="submit"
+                  className="inline-block w-full mt-6 rounded bg-primary px-7 pb-2.5 pt-3 text-sm font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
+                  fullWidth
+                >
+                  Send Email
+                </Button>
+              )}
 
               <p className="mb-0 mt-2 pt-1 text-sm font-semibold">
                 If you already have an account?&nbsp;

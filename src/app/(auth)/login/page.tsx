@@ -1,9 +1,10 @@
 "use client";
 import { callAPI } from "@/utils/Common/ApiCall";
+import { hasToken } from "@/utils/Common/Functions";
 import { Button, CircularProgress, TextField } from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 const page = () => {
@@ -13,6 +14,10 @@ const page = () => {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    hasToken(router);
+  }, [router]);
 
   const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
@@ -56,6 +61,7 @@ const page = () => {
           setEmailError(false);
           setPassword("");
           setPasswordError(false);
+          setLoading(false);
         } else {
           setLoading(false);
         }
