@@ -176,6 +176,27 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+exports.getUserDetails = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const existingUser = await User.findByPk(userId);
+    if (!existingUser) {
+      return ResponseData(res, 200, "failure", null, "User not found.");
+    }
+
+    const responseData = {
+      userId: existingUser.userId,
+      orgId: existingUser.orgId,
+      userType: existingUser.userType,
+    };
+
+    return ResponseData(res, 200, "success", responseData, null);
+  } catch (error) {
+    return ResponseData(res, 500, "failure", null, "Internal Server Error.");
+  }
+};
+
 exports.updateUser = async (req, res) => {
   const { id, orgId, name, email, password, contactNo, shopName, shopAddress } =
     req.body;

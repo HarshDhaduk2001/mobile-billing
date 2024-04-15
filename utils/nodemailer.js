@@ -24,7 +24,7 @@ exports.sendPasswordResetEmail = async (user, token, res) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    ResponseData(res, 200, "success", null, "Email sent successfully.");
+    ResponseData(res, 200, "success", null, "Please check your email.");
   } catch (error) {
     ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }

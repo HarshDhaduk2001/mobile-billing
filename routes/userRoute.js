@@ -8,6 +8,7 @@ router.post("/login", userController.login);
 router.post("/forgot-password", userController.forgotpassword);
 router.post("/reset-password", userController.resetPassword);
 router.get("/", authenticateJWT, userController.getAllUsers);
+router.get("/getUserDetails", authenticateJWT, userController.getUserDetails);
 router.post("/updateUser", authenticateJWT, userController.updateUser);
 router.post("/delete/:id", authenticateJWT, userController.deleteUser);
 
