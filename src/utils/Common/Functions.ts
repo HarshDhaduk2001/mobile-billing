@@ -20,14 +20,16 @@ export const handleLogoutUtil = async () => {
   const url = `${process.env.api_url}/auth/logout`;
   const successCallback = (
     ResponseData: any,
+    Message: string | null,
     error: any,
     ResponseStatus: any
   ) => {
-    if (ResponseStatus === "Success" && error === false) {
+    if (ResponseStatus === "success" && error === false) {
       localStorage.clear();
     } else {
       toast.error("Something went wrong.");
     }
   };
-  callAPI(url, params, successCallback, "GET");
+  // callAPI(url, params, successCallback, "GET");
+  localStorage.clear();
 };

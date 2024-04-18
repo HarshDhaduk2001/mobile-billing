@@ -69,7 +69,7 @@ const page = () => {
           </div>
           <div className="w-[1px] h-[70vh] bg-slate-600">&nbsp;</div>
           <div className="md:w-8/12 lg:ml-6 lg:w-5/12 pl-20 pr-40">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="w-[300px] lg:w-[356px]">
               <h1 className="pt-14 pb-2 font-bold text-[30px]">
                 Forgot Password?
               </h1>
