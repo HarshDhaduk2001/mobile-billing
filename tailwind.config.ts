@@ -7,6 +7,9 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    fontFamily: {
+      proxima: ["Proxima Nova"],
+    },
     extend: {
       colors: {
         primary: "#0281B9",
@@ -14,6 +17,9 @@ const config: Config = {
         pureWhite: "#FFF",
         pureBlack: "#000",
         defaultRed: "#DC3545",
+        darkCharcoal: "#333333",
+        whiteSmoke: "#F6F6F6",
+        slatyGrey: "#6E6D7A",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
