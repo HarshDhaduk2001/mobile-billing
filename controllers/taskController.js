@@ -1,7 +1,6 @@
 const Customer = require("../models/customerMode");
 const sequelize = require("../config/db");
 const ExcelJS = require("exceljs");
-const { Op } = require("sequelize");
 const { ResponseData } = require("../utils/responseData");
 const Repair = require("../models/repairModel");
 const Status = require("../models/statusModel");

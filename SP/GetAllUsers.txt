@@ -3,7 +3,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllUsers`(
     IN pageNumber INT,
     IN globalSearch VARCHAR(255),
     IN orgId INT,
-    IN userType INT
+    IN userType INT,
+    IN isDownload BOOLEAN
 )
 BEGIN
     DECLARE offsetValue INT DEFAULT 0;
@@ -44,11 +45,19 @@ INTO totalCount FROM
 SELECT totalCount AS totalCount;
 
     -- Select paginated results with limit and offset
-SELECT 
-    *
-FROM
-    TempGetAllUsers
-LIMIT PAGESIZE OFFSET OFFSETVALUE;
+IF NOT isDownload THEN
+        SELECT 
+            *
+        FROM
+            TempGetAllUsers
+        LIMIT pageSize OFFSET offsetValue;
+    ELSE
+        -- Select all results if downloading
+        SELECT 
+            *
+        FROM
+            TempGetAllUsers;
+    END IF;
 
     -- Drop the temporary table
     DROP TEMPORARY TABLE IF EXISTS TempGetAllUsers;

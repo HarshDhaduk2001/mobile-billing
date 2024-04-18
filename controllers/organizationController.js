@@ -1,4 +1,5 @@
 const Organization = require("../models/organizationModel");
+const User = require("../models/userModel");
 const { ResponseData } = require("../utils/responseData");
 require("dotenv").config();
 
@@ -140,7 +141,7 @@ exports.updateOrganization = async (req, res) => {
   }
 };
 
-exports.deleteOrganization = async (req, res) => {
+exports.toggleOrganization = async (req, res) => {
   try {
     const orgId = req.params.id;
 
@@ -155,27 +156,43 @@ exports.deleteOrganization = async (req, res) => {
     }
 
     const org = await Organization.findOne({
-      where: { orgId, deletedAt: null },
+      where: { orgId },
     });
     if (!org) {
       return ResponseData(res, 200, "failure", null, "Organization not found.");
     }
 
-    await Organization.update(
-      { deletedAt: new Date() },
-      {
-        where: { orgId },
+    if (org.deletedAt === null) {
+      org.deletedAt = new Date();
+    } else {
+      org.deletedAt = null;
+    }
+    await org.save();
+
+    const users = await User.findAll({
+      where: { orgId },
+    });
+
+    for (const user of users) {
+      if (org.deletedAt === null) {
+        user.deletedAt = null;
+      } else {
+        user.deletedAt = new Date();
       }
-    );
+      await user.save();
+    }
 
     return ResponseData(
       res,
       200,
       "success",
       null,
-      "Organization has been deleted successfully."
+      `Organization ${
+        org.deletedAt === null ? "activated" : "deactivated"
+      } successfully.`
     );
   } catch (error) {
+    console.error(error);
     return ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
@@ -183,7 +200,7 @@ exports.deleteOrganization = async (req, res) => {
 exports.getOrganizationList = async (req, res) => {
   const userOrgId = req.user.orgId;
   const userType = req.user.userType;
-  console.log(userType)
+  console.log(userType);
   try {
     let org;
     if (userType === 1) {
