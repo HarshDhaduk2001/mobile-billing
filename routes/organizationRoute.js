@@ -12,9 +12,9 @@ router.get(
 router.get("/:id", authenticateJWT, organizationController.getOrganizationById);
 router.post("/", organizationController.createOrganization);
 router.post(
-  "/delete/:id",
+  "/toggle/:id",
   authenticateJWT,
-  organizationController.deleteOrganization
+  organizationController.toggleOrganization
 );
 router.post("/:id", authenticateJWT, organizationController.updateOrganization);
 
