@@ -203,9 +203,59 @@ exports.getUserDetails = async (req, res) => {
   }
 };
 
-exports.updateUser = async (req, res) => {
-  const { id, orgId, name, email, password, contactNo, shopName, shopAddress } =
+exports.createUser = async (req, res) => {
+  const { name, orgId, email, contactNo, shopName, shopAddress, userType } =
     req.body;
+
+  try {
+    const existingUser = await User.findOne({ where: { email, orgId } });
+    if (existingUser) {
+      return ResponseData(
+        res,
+        200,
+        "warning",
+        null,
+        "User with this email and organization already exists."
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(name, 10);
+    await User.create({
+      name,
+      orgId,
+      email,
+      password: hashedPassword,
+      contactNo,
+      shopName,
+      shopAddress,
+      userType,
+    });
+
+    return ResponseData(
+      res,
+      200,
+      "success",
+      null,
+      "User created successfully."
+    );
+  } catch (error) {
+    console.error(error);
+    return ResponseData(res, 500, "failure", null, "Internal Server Error.");
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  const id = req.params.id;
+  const {
+    orgId,
+    name,
+    email,
+    password,
+    contactNo,
+    shopName,
+    shopAddress,
+    userType,
+  } = req.body;
 
   try {
     const existingUser = await User.findByPk(id);
@@ -219,6 +269,7 @@ exports.updateUser = async (req, res) => {
     existingUser.contactNo = contactNo;
     existingUser.shopName = shopName;
     existingUser.shopAddress = shopAddress;
+    existingUser.userType = userType;
 
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -235,6 +286,43 @@ exports.updateUser = async (req, res) => {
       "User updated successfully."
     );
   } catch (error) {
+    return ResponseData(res, 500, "failure", null, "Internal Server Error.");
+  }
+};
+
+exports.getUserById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (isNaN(id) || id <= 0) {
+      return ResponseData(res, 200, "failure", null, "Invalid status ID.");
+    }
+
+    const user = await User.findOne({
+      where: { userId: id },
+    });
+
+    if (!user) {
+      return ResponseData(res, 200, "failure", null, "User not found.");
+    }
+
+    return ResponseData(
+      res,
+      200,
+      "success",
+      {
+        id: user.userId,
+        orgId: user.orgId,
+        name: user.name,
+        email: user.email,
+        contactNo: user.contactNo,
+        shopName: user.shopName,
+        shopAddress: user.shopAddress,
+        userType: user.userType,
+      },
+      null
+    );
+  } catch (error) {
+    console.error(error);
     return ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };

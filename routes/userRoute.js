@@ -9,7 +9,9 @@ router.post("/forgot-password", userController.forgotpassword);
 router.post("/reset-password", userController.resetPassword);
 router.post("/", authenticateJWT, userController.getAllUsers);
 router.get("/getUserDetails", authenticateJWT, userController.getUserDetails);
-router.post("/updateUser", authenticateJWT, userController.updateUser);
+router.post("/createUser", authenticateJWT, userController.createUser);
+router.post("/updateUser/:id", authenticateJWT, userController.updateUser);
+router.get("/getUserById/:id", authenticateJWT, userController.getUserById);
 router.post("/user/export", authenticateJWT, userController.exportUsersToExcel);
 router.post("/toggle/:id", authenticateJWT, userController.toggleUser);
 
