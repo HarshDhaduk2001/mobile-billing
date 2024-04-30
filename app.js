@@ -2,6 +2,9 @@ const express = require("express");
 const dotenv = require("dotenv");
 const sequelize = require("./config/db");
 const cors = require("cors");
+require("./models/permissionModel");
+require("./models/permissionActionModel");
+require("./models/permissionActionMapping");
 
 dotenv.config({ path: "./.env" });
 
@@ -26,6 +29,8 @@ app.use("/auth", require("./routes/userRoute"));
 app.use("/task", require("./routes/taskRoute"));
 app.use("/status", require("./routes/statusRoute"));
 app.use("/organization", require("./routes/organizationRoute"));
+app.use("/role", require("./routes/roleRoute"));
+app.use("/permission", require("./routes/permissionRoute"));
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
