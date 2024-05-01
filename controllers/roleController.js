@@ -25,6 +25,26 @@ exports.getAllRole = async (req, res) => {
   }
 };
 
+exports.getRoleList = async (req, res) => {
+  try {
+    const orgId = req.user.orgId;
+
+    const roles = await Role.findAll({
+      where: { orgId },
+      attributes: ["roleId", "name"],
+    });
+
+    const formattedRoles = roles.map((role) => ({
+      value: role.roleId,
+      label: role.name,
+    }));
+
+    return ResponseData(res, 200, "success", formattedRoles, null);
+  } catch (error) {
+    return ResponseData(res, 500, "failure", null, "Internal Server Error.");
+  }
+};
+
 exports.getRoleById = async (req, res) => {
   try {
     const roleId = req.params.id;
@@ -48,16 +68,11 @@ exports.getRoleById = async (req, res) => {
 
 exports.createRole = async (req, res) => {
   try {
-    const { name, roleActionMapping } = req.body;
+    const { name } = req.body;
     const orgId = req.user.orgId;
 
     if (!name) {
       return ResponseData(res, 200, "failure", null, "Name is required.");
-    }
-
-    let formattedRoleActionMapping = null;
-    if (Array.isArray(roleActionMapping) && roleActionMapping.length > 0) {
-      formattedRoleActionMapping = roleActionMapping.join(",");
     }
 
     const existingRole = await Role.findOne({ where: { name, orgId } });
@@ -74,7 +89,6 @@ exports.createRole = async (req, res) => {
     await Role.create({
       name,
       orgId,
-      roleActionMapping: formattedRoleActionMapping,
     });
 
     return ResponseData(
@@ -85,7 +99,6 @@ exports.createRole = async (req, res) => {
       "Role created successfully."
     );
   } catch (error) {
-    console.error(error);
     return ResponseData(res, 500, "failure", null, "Internal Server Error.");
   }
 };
@@ -94,7 +107,7 @@ exports.updateRole = async (req, res) => {
   try {
     const roleId = req.params.id;
     const orgId = req.user.orgId;
-    const { name, roleActionMapping } = req.body;
+    const { name } = req.body;
 
     if (!name) {
       return ResponseData(res, 200, "failure", null, "Name is required.");
@@ -118,13 +131,7 @@ exports.updateRole = async (req, res) => {
       );
     }
 
-    let formattedRoleActionMapping = null;
-    if (Array.isArray(roleActionMapping) && roleActionMapping.length > 0) {
-      formattedRoleActionMapping = roleActionMapping.join(",");
-    }
-
     role.name = name;
-    role.roleActionMapping = formattedRoleActionMapping;
     await role.save();
 
     return ResponseData(
@@ -133,6 +140,38 @@ exports.updateRole = async (req, res) => {
       "success",
       null,
       "Role updated successfully."
+    );
+  } catch (error) {
+    return ResponseData(res, 500, "failure", null, "Internal Server Error.");
+  }
+};
+
+exports.updateRolePermission = async (req, res) => {
+  try {
+    const roleId = req.params.id;
+    const { roleActionMapping } = req.body;
+
+    const role = await Role.findOne({
+      where: { roleId },
+    });
+    if (!role) {
+      return ResponseData(res, 200, "failure", null, "Role not found.");
+    }
+
+    let formattedRoleActionMapping = null;
+    if (Array.isArray(roleActionMapping) && roleActionMapping.length > 0) {
+      formattedRoleActionMapping = roleActionMapping.join(",");
+    }
+
+    role.roleActionMapping = formattedRoleActionMapping;
+    await role.save();
+
+    return ResponseData(
+      res,
+      200,
+      "success",
+      null,
+      "Permission updated successfully."
     );
   } catch (error) {
     return ResponseData(res, 500, "failure", null, "Internal Server Error.");

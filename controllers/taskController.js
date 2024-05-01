@@ -19,7 +19,7 @@ exports.getAllTasks = async (req, res) => {
     const userType = req.user.userType;
 
     const repairDetails = await Repair.sequelize.query(
-      "CALL GetAllTasks(:pageSize, :pageNumber, :globalSearch, :taskStatusId, :receivedBy, :updatedBy, :orgId, :userType, :isDownload)",
+      "CALL getTaskList(:pageSize, :pageNumber, :globalSearch, :taskStatusId, :receivedBy, :updatedBy, :orgId, :userType, :isDownload)",
       {
         replacements: {
           pageSize,
@@ -310,7 +310,7 @@ exports.exportTasksToExcel = async (req, res) => {
     const userType = req.user.userType;
 
     const responseData = await Repair.sequelize.query(
-      "CALL GetAllTasks(:pageSize, :pageNumber, :globalSearch, :taskStatusId, :receivedBy, :updatedBy, :orgId, :userType, :isDownload)",
+      "CALL getTaskList(:pageSize, :pageNumber, :globalSearch, :taskStatusId, :receivedBy, :updatedBy, :orgId, :userType, :isDownload)",
       {
         replacements: {
           pageSize,

@@ -9,8 +9,16 @@ const sequelize = require("../config/db");
 const secretKey = process.env.SECRET_KEY;
 
 exports.register = async (req, res) => {
-  const { name, orgId, email, password, contactNo, shopName, shopAddress } =
-    req.body;
+  const {
+    name,
+    orgId,
+    roleId,
+    email,
+    password,
+    contactNo,
+    shopName,
+    shopAddress,
+  } = req.body;
 
   try {
     const existingUser = await User.findOne({ where: { email, orgId } });
@@ -28,6 +36,7 @@ exports.register = async (req, res) => {
     await User.create({
       name,
       orgId,
+      roleId,
       email,
       password: hashedPassword,
       contactNo,
@@ -154,7 +163,7 @@ exports.getAllUsers = async (req, res) => {
     const isDownload = true;
 
     const userDetails = await User.sequelize.query(
-      "CALL GetAllUsers(:pageSize, :pageNumber, :globalSearch, :orgId, :userType, :isDownload)",
+      "CALL getUserList(:pageSize, :pageNumber, :globalSearch, :orgId, :userType, :isDownload)",
       {
         replacements: {
           pageSize,
@@ -204,8 +213,16 @@ exports.getUserDetails = async (req, res) => {
 };
 
 exports.createUser = async (req, res) => {
-  const { name, orgId, email, contactNo, shopName, shopAddress, userType } =
-    req.body;
+  const {
+    name,
+    orgId,
+    roleId,
+    email,
+    contactNo,
+    shopName,
+    shopAddress,
+    userType,
+  } = req.body;
 
   try {
     const existingUser = await User.findOne({ where: { email, orgId } });
@@ -223,6 +240,7 @@ exports.createUser = async (req, res) => {
     await User.create({
       name,
       orgId,
+      roleId,
       email,
       password: hashedPassword,
       contactNo,
@@ -247,8 +265,9 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   const id = req.params.id;
   const {
-    orgId,
     name,
+    orgId,
+    roleId,
     email,
     password,
     contactNo,
@@ -264,6 +283,7 @@ exports.updateUser = async (req, res) => {
     }
 
     existingUser.name = name;
+    existingUser.roleId = roleId;
     existingUser.orgId = orgId;
     existingUser.email = email;
     existingUser.contactNo = contactNo;
@@ -373,7 +393,7 @@ exports.exportUsersToExcel = async (req, res) => {
     const isDownload = true;
 
     const resData = await User.sequelize.query(
-      "CALL GetAllUsers(:pageSize, :pageNumber, :globalSearch, :orgId, :userType, :isDownload)",
+      "CALL getUserList(:pageSize, :pageNumber, :globalSearch, :orgId, :userType, :isDownload)",
       {
         replacements: {
           pageSize,
