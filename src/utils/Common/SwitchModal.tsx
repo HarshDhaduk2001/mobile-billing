@@ -11,6 +11,11 @@ import {
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { ColorToolTip } from "./CommonStyle";
+import {
+  ContainedButton,
+  ErrorOutlineButton,
+  OutlineButton,
+} from "@/components/common/Button";
 
 interface SwitchModalProps {
   isOpen: boolean;
@@ -48,34 +53,27 @@ const SwitchModal = ({
         <DialogContent>
           <DialogContentText
             id="alert-dialog-description"
-            className="border-y border-y-lightSilver w-full py-4"
+            className="border-y border-y-lightSilver w-full py-4 pr-10"
           >
-            <Typography className="pb-2 text-darkCharcoal flex items-start">
+            <Typography className="pb-2 text-darkCharcoal flex items-start pr-10">
               {firstContent ? firstContent : ""}
             </Typography>
           </DialogContentText>
         </DialogContent>
         <DialogActions className="mb-2">
-          <Button
-            variant="outlined"
-            className="rounded-[4px] !h-[36px] !text-defaultRed"
-            onClick={() => {
-              onClose();
-            }}
-            color="error"
-          >
+          <ErrorOutlineButton type="button" fullWidth={false} onClick={onClose}>
             Cancel
-          </Button>
-          <Button
-            variant="contained"
-            className="rounded-[4px] !h-[36px] !mx-6 !bg-primary cursor-pointer"
+          </ErrorOutlineButton>
+          <OutlineButton
+            type="button"
+            fullWidth={false}
             onClick={() => {
               onActionClick();
               onClose();
             }}
           >
             Yes
-          </Button>
+          </OutlineButton>
         </DialogActions>
       </Dialog>
     </>

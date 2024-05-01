@@ -1,16 +1,20 @@
 import LineIcon from "@/assets/icons/common/LineIcon";
 import SearchIcon from "@/assets/icons/common/SearchIcon";
-import { InputBase } from "@mui/material";
+import { Button, InputBase } from "@mui/material";
 import React, { Fragment, useState } from "react";
-import SettingUser from "./SettingUser";
-import { ColorToolTip } from "@/utils/Common/CommonStyle";
+import SettingUser from "./Tables/SettingUser";
 import ExportIcon from "@/assets/icons/common/ExportIcon";
 import LoadingIcon from "@/assets/icons/common/LoadingIcon";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { getCurrentTabDetails } from "@/utils/settings/Filters";
-import SettingStatus from "./SettingStatus";
-import SettingOrganization from "./SettingOrganization";
+import SettingStatus from "./Tables/SettingStatus";
+import SettingOrganization from "./Tables/SettingOrganization";
+import { ColorToolTip } from "@/utils/common/CommonStyle";
+import MainDrawer from "./Drawers/MainDrawer";
+import DrawerOverlay from "../common/DrawerOverlay";
+import { ContainedButton } from "../common/Button";
+import SettingPermission from "./Tables/SettingPermission";
 
 interface Tabs {
   label: string;
@@ -21,7 +25,8 @@ interface Tabs {
 const allTabs = [
   { label: "user", value: 1, name: "User" },
   { label: "status", value: 2, name: "Status" },
-  { label: "organization", value: 3, name: "Organization" },
+  { label: "permission", value: 3, name: "Permission" },
+  { label: "organization", value: 4, name: "Organization" },
 ];
 
 const MainSettings = () => {
@@ -31,6 +36,9 @@ const MainSettings = () => {
   const [canExport, setCanExport] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [filteredData, setFilteredData] = useState<any>(null);
+  const [editId, setEditId] = useState<number>(0);
+  const [openDrawer, setOpenDrawer] = useState<boolean>(false);
+  const [dataFunction, setDataFunction] = useState<(() => void) | null>(null);
 
   const handleTabChange = (tabId: number) => {
     setActiveTab(tabId);
@@ -105,6 +113,24 @@ const MainSettings = () => {
     setIsExporting(false);
   };
 
+  const handleDrawerOpen = () => {
+    setOpenDrawer(true);
+  };
+
+  const handleDrawerClose = () => {
+    setOpenDrawer(false);
+    setEditId(0);
+  };
+
+  const handleDataFetch = (getData: () => void) => {
+    setDataFunction(() => getData);
+  };
+
+  const getEdidId = (id: number) => {
+    setEditId(id);
+    setOpenDrawer(true);
+  };
+
   return (
     <>
       <div className="w-full py-2 pr-5 flex items-center justify-between">
@@ -126,45 +152,81 @@ const MainSettings = () => {
           ))}
         </div>
 
-        {activeTab === 1 && (
-          <div className="h-full flex items-center gap-5">
-            <div className="relative">
-              <InputBase
-                className="pl-1 pr-7 border-b border-b-lightSilver w-52"
-                placeholder="Search"
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-              />
-              <span className="absolute top-2 right-2 text-slatyGrey">
-                <SearchIcon />
-              </span>
-            </div>
-
-            <ColorToolTip title="Export" placement="top" arrow>
-              <span
-                className={`${
-                  isExporting ? "cursor-default" : "cursor-pointer"
-                } ${!canExport ? "opacity-50 pointer-events-none" : ""} `}
-                onClick={!canExport ? undefined : handleExport}
-              >
-                {isExporting ? <LoadingIcon /> : <ExportIcon />}
-              </span>
-            </ColorToolTip>
-          </div>
-        )}
+        <div className="h-full flex items-center gap-5">
+          {activeTab === 1 && (
+            <>
+              <div className="relative">
+                <InputBase
+                  className="pl-1 pr-7 border-b border-b-lightSilver w-52"
+                  placeholder="Search"
+                  value={search}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                />
+                <span className="absolute top-2 right-2 text-slatyGrey">
+                  <SearchIcon />
+                </span>
+              </div>
+              <ColorToolTip title="Export" placement="top" arrow>
+                <span
+                  className={`${
+                    isExporting ? "cursor-default" : "cursor-pointer"
+                  } ${!canExport ? "opacity-50 pointer-events-none" : ""} `}
+                  onClick={!canExport ? undefined : handleExport}
+                >
+                  {isExporting ? <LoadingIcon /> : <ExportIcon />}
+                </span>
+              </ColorToolTip>
+            </>
+          )}
+          {activeTab === 3 && ("role"
+          )}
+          <ContainedButton
+            type="button"
+            onClick={handleDrawerOpen}
+            fullWidth={false}
+          >
+            Create&nbsp;
+            {
+              allTabs
+                .map((i: Tabs) => (i.value === activeTab ? i.name : false))
+                .filter((j: string | boolean) => j !== false)[0]
+            }
+          </ContainedButton>
+        </div>
       </div>
+
+      <MainDrawer
+        editId={editId}
+        activeTab={activeTab}
+        onOpen={openDrawer}
+        onClose={handleDrawerClose}
+        onDataFetch={dataFunction}
+      />
+
+      {/* Drawer Overlay */}
+      <DrawerOverlay isOpen={openDrawer} />
 
       {activeTab === 1 && (
         <SettingUser
           searchValue={searchValue}
           filteredData={filteredData}
           onHandleExport={handleCanExport}
+          onDataFetch={handleDataFetch}
+          editId={getEdidId}
         />
       )}
 
-      {activeTab === 2 && <SettingStatus />}
+      {activeTab === 2 && (
+        <SettingStatus onDataFetch={handleDataFetch} editId={getEdidId} />
+      )}
 
-      {activeTab === 3 && <SettingOrganization />}
+      {activeTab === 3 && (
+        <SettingPermission onDataFetch={handleDataFetch} editId={getEdidId} />
+      )}
+
+      {activeTab === 4 && (
+        <SettingOrganization onDataFetch={handleDataFetch} editId={getEdidId} />
+      )}
     </>
   );
 };

@@ -1,7 +1,7 @@
 "use client";
 import LogoutIcon from "@/assets/icons/common/LogoutIcon";
-import { callAPI } from "@/utils/Common/ApiCall";
-import { handleLogoutUtil } from "@/utils/Common/Functions";
+import { callAPI } from "@/utils/common/ApiCall";
+import { handleLogoutUtil } from "@/utils/common/Functions";
 import { Avatar } from "@mui/material";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";

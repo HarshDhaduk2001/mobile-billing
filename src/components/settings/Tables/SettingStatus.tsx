@@ -1,15 +1,17 @@
-import { callAPI } from "@/utils/Common/ApiCall";
-import { generateCustomHeaderName } from "@/utils/Common/ColsCommonFunction";
-import { generateCustomColumn } from "@/utils/Common/ColsGenerateFunctions";
-import { getMuiTheme } from "@/utils/Common/CommonStyle";
+import { getMuiTheme } from "@/utils/common/CommonStyle";
+import { callAPI } from "@/utils/common/ApiCall";
+import { generateCustomHeaderName } from "@/utils/common/ColsCommonFunction";
+import { generateCustomColumn } from "@/utils/common/ColsGenerateFunctions";
 import { settingStatusColConfig } from "@/utils/settings/DatatableColumns";
 import { options } from "@/utils/settings/TableOption";
-import { FieldsType, StatusList } from "@/utils/settings/types";
-import { CircularProgress, ThemeProvider } from "@mui/material";
+import { FieldsType, SettingTableProps, StatusList } from "@/utils/settings/types";
+import { ThemeProvider } from "@mui/material";
 import MUIDataTable from "mui-datatables";
 import React, { useEffect, useState } from "react";
+import OverLay from "@/components/common/OverLay";
+import { Edit } from "@mui/icons-material";
 
-const SettingStatus = () => {
+const SettingStatus = ({ onDataFetch, editId }: SettingTableProps) => {
   const [statusFields, setStatusFields] = useState<FieldsType>({
     loaded: false,
     data: [],
@@ -51,7 +53,14 @@ const SettingStatus = () => {
   };
 
   useEffect(() => {
-    getData();
+    const fetchData = async () => {
+      await getData();
+      onDataFetch(() => fetchData());
+    };
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const generateConditionalColumn = (column: {
@@ -83,6 +92,25 @@ const SettingStatus = () => {
           },
         },
       };
+    } else if (column.name === "action") {
+      return {
+        name: "action",
+        options: {
+          filter: true,
+          sort: true,
+          customHeadLabelRender: () => generateCustomHeaderName("Action"),
+          customBodyRender: (value: number | null, tableMeta: any) => {
+            return (
+              <div
+                onClick={() => editId(tableMeta.rowData[0])}
+                className="cursor-pointer"
+              >
+                <Edit />
+              </div>
+            );
+          },
+        },
+      };
     } else {
       return generateCustomColumn(
         column.name,
@@ -108,9 +136,7 @@ const SettingStatus = () => {
           />
         </ThemeProvider>
       ) : (
-        <div className="flex items-center justify-center h-full">
-          <CircularProgress />
-        </div>
+        <OverLay />
       )}
     </>
   );

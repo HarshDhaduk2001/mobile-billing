@@ -21,7 +21,7 @@ const Sidebar = () => {
     <div className="flex flex-col items-center justify-start w-full h-full gap-5 border-r text-darkCharcoal">
       <span className="flex items-center justify-center w-full h-[10%] mb-[-12px] text-primary font-medium text-[24px] border-b">
         {/* &#128512; */}
-        MM
+        Mobile Billing
       </span>
       {sidebarItems.map((item: { name: string; href: string; icon: any }) => (
         <Link

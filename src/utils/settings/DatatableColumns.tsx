@@ -1,6 +1,11 @@
-import { generateCommonBodyRender } from "../Common/ColsCommonFunction";
+import { generateCommonBodyRender } from "../common/ColsCommonFunction";
 
 export const settingUserColConfig = [
+  {
+    name: "id",
+    label: "id",
+    bodyRenderer: generateCommonBodyRender,
+  },
   {
     name: "name",
     label: "Name",
@@ -37,8 +42,8 @@ export const settingUserColConfig = [
     bodyRenderer: generateCommonBodyRender,
   },
   {
-    name: "id",
-    label: "id",
+    name: "action",
+    label: "Action",
     bodyRenderer: generateCommonBodyRender,
   },
 ];
@@ -59,6 +64,11 @@ export const settingStatusColConfig = [
     label: "Color Code",
     bodyRenderer: generateCommonBodyRender,
   },
+  {
+    name: "action",
+    label: "Action",
+    bodyRenderer: generateCommonBodyRender,
+  },
 ];
 
 export const settingOrgColConfig = [
@@ -75,6 +85,11 @@ export const settingOrgColConfig = [
   {
     name: "deletedAt",
     label: "Status",
+    bodyRenderer: generateCommonBodyRender,
+  },
+  {
+    name: "action",
+    label: "Action",
     bodyRenderer: generateCommonBodyRender,
   },
 ];

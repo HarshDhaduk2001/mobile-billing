@@ -61,7 +61,10 @@ export const callAPI = async (
       successCallback(null, Message, true, ResponseStatus.toLowerCase());
     }
   } catch (error: any) {
-    if (error.response && error.response.status === 401) {
+    if (
+      error.response &&
+      (error.response.status === 401 || error.response.status === 403)
+    ) {
       window.location.href = "/login";
       localStorage.clear();
     }

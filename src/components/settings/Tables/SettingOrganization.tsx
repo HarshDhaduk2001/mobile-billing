@@ -1,17 +1,22 @@
-import { callAPI } from "@/utils/Common/ApiCall";
-import { generateCustomHeaderName } from "@/utils/Common/ColsCommonFunction";
-import { generateCustomColumn } from "@/utils/Common/ColsGenerateFunctions";
-import { getMuiTheme } from "@/utils/Common/CommonStyle";
-import SwitchModal from "@/utils/Common/SwitchModal";
+import OverLay from "@/components/common/OverLay";
+import { callAPI } from "@/utils/common/ApiCall";
+import { generateCustomHeaderName } from "@/utils/common/ColsCommonFunction";
+import { generateCustomColumn } from "@/utils/common/ColsGenerateFunctions";
+import { getMuiTheme } from "@/utils/common/CommonStyle";
+import SwitchModal from "@/utils/common/SwitchModal";
 import { settingOrgColConfig } from "@/utils/settings/DatatableColumns";
 import { options } from "@/utils/settings/TableOption";
-import { FieldsType, OrgList } from "@/utils/settings/types";
-import { CircularProgress, Switch, ThemeProvider } from "@mui/material";
+import { FieldsType, OrgList, SettingTableProps } from "@/utils/settings/types";
+import { Edit } from "@mui/icons-material";
+import { Switch, ThemeProvider } from "@mui/material";
 import MUIDataTable from "mui-datatables";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-const SettingOrganization = () => {
+const SettingOrganization = ({
+  onDataFetch,
+  editId,
+}: SettingTableProps) => {
   const [orgFields, setOrgFields] = useState<FieldsType>({
     loaded: false,
     data: [],
@@ -23,6 +28,7 @@ const SettingOrganization = () => {
 
   const closeSwitchModal = async () => {
     await setIsOpenSwitchModal(false);
+    getData();
   };
 
   const handleToggleOrganization = async () => {
@@ -83,7 +89,14 @@ const SettingOrganization = () => {
   };
 
   useEffect(() => {
-    getData();
+    const fetchData = async () => {
+      await getData();
+      onDataFetch(() => fetchData());
+    };
+    const timer = setTimeout(() => {
+      fetchData();
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const generateConditionalColumn = (column: {
@@ -115,6 +128,25 @@ const SettingOrganization = () => {
           },
         },
       };
+    } else if (column.name === "action") {
+      return {
+        name: "action",
+        options: {
+          filter: true,
+          sort: true,
+          customHeadLabelRender: () => generateCustomHeaderName("Action"),
+          customBodyRender: (value: number | null, tableMeta: any) => {
+            return (
+              <div
+                onClick={() => editId(tableMeta.rowData[0])}
+                className="cursor-pointer"
+              >
+                <Edit />
+              </div>
+            );
+          },
+        },
+      };
     } else {
       return generateCustomColumn(
         column.name,
@@ -139,9 +171,7 @@ const SettingOrganization = () => {
           />
         </ThemeProvider>
       ) : (
-        <div className="flex items-center justify-center h-full">
-          <CircularProgress />
-        </div>
+        <OverLay />
       )}
 
       {isOpenSwitchModal && (

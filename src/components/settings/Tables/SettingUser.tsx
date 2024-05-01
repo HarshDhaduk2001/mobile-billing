@@ -1,23 +1,27 @@
-import { callAPI } from "@/utils/Common/ApiCall";
+import { callAPI } from "@/utils/common/ApiCall";
 import { FieldsType, SettingProps } from "@/utils/settings/types";
 import { UserFilteredData, UserResponse } from "@/utils/settings/userTypes";
 import React, { useEffect, useState } from "react";
 import { user_InitialFilter } from "@/utils/settings/Filters";
 import { ThemeProvider } from "@mui/material";
-import { CircularProgress, Switch, TablePagination } from "@mui/material";
-import { getMuiTheme } from "@/utils/Common/CommonStyle";
+import { Switch, TablePagination } from "@mui/material";
+import { getMuiTheme } from "@/utils/common/CommonStyle";
 import { options } from "@/utils/settings/TableOption";
 import { settingUserColConfig } from "@/utils/settings/DatatableColumns";
-import { generateCustomHeaderName } from "@/utils/Common/ColsCommonFunction";
-import { generateCustomColumn } from "@/utils/Common/ColsGenerateFunctions";
+import { generateCustomHeaderName } from "@/utils/common/ColsCommonFunction";
+import { generateCustomColumn } from "@/utils/common/ColsGenerateFunctions";
 import { toast } from "react-toastify";
-import SwitchModal from "@/utils/Common/SwitchModal";
+import SwitchModal from "@/utils/common/SwitchModal";
 import MUIDataTable from "mui-datatables";
+import OverLay from "@/components/common/OverLay";
+import { Edit } from "@mui/icons-material";
 
 const SettingUser = ({
   searchValue,
   filteredData,
   onHandleExport,
+  onDataFetch,
+  editId,
 }: SettingProps) => {
   const [userFields, setUserFields] = useState<FieldsType>({
     loaded: false,
@@ -32,6 +36,7 @@ const SettingUser = ({
 
   const closeSwitchModal = async () => {
     await setIsOpenSwitchModal(false);
+    getData({ ...filteredData, globalSearch: searchValue });
   };
 
   const handleToggleUser = async () => {
@@ -142,15 +147,23 @@ const SettingUser = ({
 
   useEffect(() => {
     if (filteredData !== null) {
+      const fetchData = async () => {
+        await getData({ ...filteredData, globalSearch: searchValue });
+        onDataFetch(() => fetchData());
+      };
       const timer = setTimeout(() => {
-        getData({ ...filteredData, globalSearch: searchValue });
+        fetchData();
         setUserCurrentPage(0);
         setUserRowsPerPage(10);
       }, 500);
       return () => clearTimeout(timer);
     } else {
+      const fetchData = async () => {
+        await getData({ ...user_InitialFilter, globalSearch: searchValue });
+        onDataFetch(() => fetchData());
+      };
       const timer = setTimeout(() => {
-        getData({ ...user_InitialFilter, globalSearch: searchValue });
+        fetchData();
         setUserCurrentPage(0);
         setUserRowsPerPage(10);
       }, 500);
@@ -172,14 +185,8 @@ const SettingUser = ({
           customHeadLabelRender: () => generateCustomHeaderName("Status"),
           customBodyRender: (value: string | null, tableMeta: any) => {
             const activeUser = async () => {
-              console.log(
-                tableMeta.rowData[tableMeta.rowData.length - 1],
-                value === null ? false : true
-              );
               await setIsOpenSwitchModal(true);
-              await setSwitchId(
-                tableMeta.rowData[tableMeta.rowData.length - 1]
-              );
+              await setSwitchId(tableMeta.rowData[0]);
               await setSwitchActive(value === null ? false : true);
             };
             return (
@@ -188,6 +195,25 @@ const SettingUser = ({
                   defaultChecked={value === null}
                   onChange={() => activeUser()}
                 />
+              </div>
+            );
+          },
+        },
+      };
+    } else if (column.name === "action") {
+      return {
+        name: "action",
+        options: {
+          filter: true,
+          sort: true,
+          customHeadLabelRender: () => generateCustomHeaderName("Action"),
+          customBodyRender: (value: number | null, tableMeta: any) => {
+            return (
+              <div
+                onClick={() => editId(tableMeta.rowData[0])}
+                className="cursor-pointer"
+              >
+                <Edit />
               </div>
             );
           },
@@ -233,9 +259,7 @@ const SettingUser = ({
           />
         </ThemeProvider>
       ) : (
-        <div className="flex items-center justify-center h-full">
-          <CircularProgress />
-        </div>
+        <OverLay />
       )}
 
       {isOpenSwitchModal && (

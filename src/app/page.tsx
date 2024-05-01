@@ -1,7 +1,7 @@
 "use client";
 import Wrapper from "@/components/common/Wrapper";
 import MainSettings from "@/components/settings/MainSettings";
-import { hasNoToken } from "@/utils/Common/Functions";
+import { hasNoToken } from "@/utils/common/Functions";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 
